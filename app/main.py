@@ -30,7 +30,7 @@ class TaskManager:
             self.ids += 1
 
         self.task.update({str(self.ids): {
-            "progress": str(),
+            "status": str(),
             "description": str(),
             "date-create": str(self.date),
             "date-update": str(self.date)
@@ -66,10 +66,9 @@ class TaskManager:
 
     def mark_done(self, item_id):
         if str(item_id) in self.task.keys():
-            self.task.update({str(item_id):{
-                "progress": "done",
-                "date-update": str(self.date)
-                }})
+            self.task[str(item_id)].update({
+                "status": "done",
+                "date-update": str(self.date)})
 
             self.json_converter()
             return self.task[str(item_id)]
@@ -79,14 +78,29 @@ class TaskManager:
 
     def mark_progress(self, item_id):
         if str(item_id) in self.task.keys():
-            self.task.update({str(item_id):{
-                "progress": "in-progress",
-                "date-update": str(self.date)}})
+            self.task[str(item_id)].update({
+                "status": "in-progress",
+                "date-update": str(self.date)})
             
             self.json_converter()
             return self.task[str(item_id)]
         else:
             return {"message": f"Item {item_id} not fount"}
+
+    def find_task(self, item_status):
+        if item_status not in ["todo", "done", "in-progress"]:
+            return {"Message": "Valid inputs: todo / done / in-progress"}
+
+        elif item_status == "todo":
+            return self.task
+
+        else:
+            task_find = dict()
+            for task_id, task_info in self.task.items():
+                if task_info["status"] == item_status:
+                    task_find.update({task_id: task_info})
+
+            return task_find
 
 app = FastAPI()
 task_manager = TaskManager()
@@ -98,8 +112,8 @@ def root():
     return "Run..."
 
 @app.get("/tasks")
-def list():
-    return task_manager.list_tasks()
+def find(status: Union[str, None] = str()):
+    return task_manager.find_task(status)
 
 # -- POST METHODS --
 
