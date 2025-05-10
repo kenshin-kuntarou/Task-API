@@ -8,8 +8,6 @@ class TaskManager:
     def __init__(self):
         self.task = dict()
         self.ids = int()
-        self.date = datetime.datetime.now()
-
         self.json_atualizer()
 
     def json_atualizer(self):
@@ -30,10 +28,10 @@ class TaskManager:
             self.ids += 1
 
         self.task.update({str(self.ids): {
-            "status": str(),
+            "status": "todo",
             "description": str(),
-            "date-create": str(self.date),
-            "date-update": str(self.date)
+            "date-create": str(datetime.datetime.now()),
+            "date-update": str(datetime.datetime.now())
             }})
 
         self.json_converter()
@@ -46,7 +44,7 @@ class TaskManager:
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "description": str(message),
-                "date-update": str(self.date)})
+                "date-update": str(datetime.datetime.now)})
 
             self.json_converter()
             return self.task[str(item_id)]
@@ -68,31 +66,28 @@ class TaskManager:
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "status": "done",
-                "date-update": str(self.date)})
+                "date-update": str(datetime.datetime.now())})
 
             self.json_converter()
             return self.task[str(item_id)]
 
         else:
-            return {"message": f"Item {item_id} not found"}
+            return {"Message": f"Item {item_id} not found"}
 
     def mark_progress(self, item_id):
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "status": "in-progress",
-                "date-update": str(self.date)})
+                "date-update": str(datetime.datetime.now())})
             
             self.json_converter()
             return self.task[str(item_id)]
         else:
-            return {"message": f"Item {item_id} not fount"}
+            return {"Message": f"Item {item_id} not fount"}
 
     def find_task(self, item_status):
         if item_status not in ["todo", "done", "in-progress"]:
             return {"Message": "Valid inputs: todo / done / in-progress"}
-
-        elif item_status == "todo":
-            return self.task
 
         else:
             task_find = dict()
@@ -112,7 +107,11 @@ def root():
     return "Run..."
 
 @app.get("/tasks")
-def find(status: Union[str, None] = str()):
+def list():
+    return task_manager.list_tasks()
+
+@app.get("/tasks/find")
+def find_get(status: Union[str, None] = str()):
     return task_manager.find_task(status)
 
 # -- POST METHODS --
@@ -127,7 +126,9 @@ def add_post():
 def description_put(item_id: int, q: Union[str, None] = str()):
     return task_manager.description_update(item_id, q)
 
-@app.put("/tasks/{item_id}/done")
+# -- PATCH METHODS --
+
+@app.patch("/tasks/{item_id}/done")
 def mark_done_put(item_id: int):
     return task_manager.mark_done(item_id)
 
