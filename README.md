@@ -6,6 +6,24 @@ All tasks are stored in a `.json` file to facilitate data handling within the AP
 
 ---
 
+### Structure
+
+This would be the structure of a task inside the JSON file!
+
+```
+{
+	"1": {
+		"status": "todo",
+		"description": "description here!",
+		"date-create": "2025-05-10T22:18:12.464830",
+		"date-update": "2025-05-10T22:18:12.464921"
+	}
+}
+```
+
+---
+
+
 ### Docs
 
 It has its own documentation, which can be accessed from the `/docs` subdomain.

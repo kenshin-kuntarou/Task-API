@@ -1,14 +1,14 @@
 {
-    "1": {
-        "status": "in-progress",
-        "description": "",
-        "date-create": "2025-05-09 21:46:02.378934",
-        "date-update": "2025-05-09 22:03:28.121740"
-    },
-    "3": {
+    "0": {
         "status": "done",
-        "description": "",
-        "date-create": "2025-05-09 21:46:02.378934",
-        "date-update": "2025-05-09 22:03:28.121740"
+        "description": "teste",
+        "date-create": "2025-05-10T21:53:27.770057",
+        "date-update": "2025-05-10 21:55:11.617053"
+    },
+    "1": {
+        "status": "todo",
+        "description": "leave a star on the project's github",
+        "date-create": "2025-05-10T22:18:12.464830",
+        "date-update": "2025-05-10T22:18:12.464921"
     }
 }

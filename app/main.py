@@ -1,101 +1,112 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Body
 from typing import Union
+from datetime import datetime
 
 import json
-import datetime
 
 class TaskManager:
     def __init__(self):
         self.task = dict()
         self.ids = int()
-        self.json_atualizer()
+        self.load_tasks()
 
-    def json_atualizer(self):
+    def load_tasks(self):
         try:
             with open("tasks.json", encoding="UTF-8", mode="r") as file:
                 self.task = json.load(file)
 
+                if self.task:
+                    self.ids = max([int(i) for i in self.task.keys()]) + 1
+
         except FileNotFoundError:
             self.task = dict()
-            self.ids = int()
+            self.ids = 1
 
-    def json_converter(self):
+    def save_tasks(self):
         with open("tasks.json", encoding="UTF-8", mode="w") as file:
             json.dump(self.task, file, indent=4)
 
-    def add_task(self):
-        while str(self.ids) in self.task:
-            self.ids += 1
+    def add_task(self, description: str):
+        if not description:
+            raise HTTPException(status_code=400, detail="Input cannot be empty")
 
         self.task.update({str(self.ids): {
             "status": "todo",
-            "description": str(),
-            "date-create": str(datetime.datetime.now()),
-            "date-update": str(datetime.datetime.now())
-            }})
+            "description": description,
+            "date-create": datetime.now().isoformat(),
+            "date-update": datetime.now().isoformat()}})
 
-        self.json_converter()
-        return self.task[str(self.ids)]
-
-    def list_tasks(self):
-        return self.task
+        self.save_tasks()
+        self.ids += 1
+        return self.task[str(self.ids - 1)]
 
     def description_update(self, item_id, message):
+        if not message:
+            raise HTTPException(status_code=400, detail="Input cannot be empty")
+
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "description": str(message),
-                "date-update": str(datetime.datetime.now)})
+                "date-update": datetime.now().isoformat()})
 
-            self.json_converter()
+            self.save_tasks()
             return self.task[str(item_id)]
 
         else:
-            return{"Message": f"Item {item_id} not found"}
+            raise HTTPException(status_code=404, detail="Item not found")
 
     def delete_task(self, item_id):
         if str(item_id) in self.task.keys():
             del self.task[str(item_id)]
-            self.json_converter()
+            self.save_tasks()
 
             return {"Message": f"Item {item_id} delete!"}
 
         else:
-            return {"Message": f"Item {item_id} not found!"}
+            raise HTTPException(status_code=404, detail="Item not found")
 
     def mark_done(self, item_id):
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "status": "done",
-                "date-update": str(datetime.datetime.now())})
+                "date-update": str(datetime.now())})
 
-            self.json_converter()
+            self.save_tasks()
             return self.task[str(item_id)]
 
         else:
-            return {"Message": f"Item {item_id} not found"}
+            raise HTTPException(status_code=404, detail="Item not found")
 
     def mark_progress(self, item_id):
         if str(item_id) in self.task.keys():
             self.task[str(item_id)].update({
                 "status": "in-progress",
-                "date-update": str(datetime.datetime.now())})
+                "date-update": str(datetime.now())})
             
-            self.json_converter()
+            self.save_tasks()
             return self.task[str(item_id)]
+
         else:
-            return {"Message": f"Item {item_id} not fount"}
+            raise HTTPException(status_code=404, detail="Item not found")
+
+    def list_tasks(self):
+        return self.task
 
     def find_task(self, item_status):
-        if item_status not in ["todo", "done", "in-progress"]:
-            return {"Message": "Valid inputs: todo / done / in-progress"}
+        if not item_status.strip():
+            raise HTTPException(status_code=400, detail="Input cannot be empty")
 
         else:
-            task_find = dict()
-            for task_id, task_info in self.task.items():
-                if task_info["status"] == item_status:
-                    task_find.update({task_id: task_info})
+            if item_status not in ["todo", "done", "in-progress"]:
+                raise HTTPException(status_code=400, detail="Valid inputs: todo / done / in-progress")
 
-            return task_find
+            else:
+                task_find = dict()
+                for task_id, task_info in self.task.items():
+                    if task_info["status"] == item_status:
+                        task_find.update({task_id: task_info})
+
+                return task_find
 
 app = FastAPI()
 task_manager = TaskManager()
@@ -104,7 +115,7 @@ task_manager = TaskManager()
 
 @app.get("/")
 def root():
-    return "Run..."
+    return {"message": "Run..."}
 
 @app.get("/tasks")
 def list():
@@ -117,14 +128,14 @@ def find_get(status: Union[str, None] = str()):
 # -- POST METHODS --
 
 @app.post("/tasks")
-def add_post():
-    return task_manager.add_task()
+def add_post(description: str = Body(...)):
+    return task_manager.add_task(description)
 
 # -- PUT METHODS --
 
 @app.put("/tasks/{item_id}/")
-def description_put(item_id: int, q: Union[str, None] = str()):
-    return task_manager.description_update(item_id, q)
+def description_put(item_id: int, description: str = Body(...)):
+    return task_manager.description_update(item_id, description)
 
 # -- PATCH METHODS --
 
@@ -132,7 +143,7 @@ def description_put(item_id: int, q: Union[str, None] = str()):
 def mark_done_put(item_id: int):
     return task_manager.mark_done(item_id)
 
-@app.put("/tasks/{item_id}/in-progress")
+@app.patch("/tasks/{item_id}/in-progress")
 def mark_progress_put(item_id: int):
     return task_manager.mark_progress(item_id)
 
