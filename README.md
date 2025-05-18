@@ -29,6 +29,6 @@ This would be the structure of a task inside the JSON file!
 It has its own documentation, which can be accessed from the `/docs` subdomain.
 
 ```
-http://127.0.0.1:8080/docs
+http://0.0.0.0:8000/docs
 ```
 ---
